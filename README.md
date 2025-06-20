@@ -15,13 +15,13 @@ Expose an endpoint type GET /camel/user/{name} and consumes two network resource
 
 The router RestConsumerRouter has an endpoint **direct:processRequest** consists of consuming two resources given a name, processes and stores them in a property and then assembles a custom object and returns the result. It also sends an audit log in an ActiveMQ queue.
 
-[!Service A flow](/image/ServiceADiagram.png)
+![Service A flow](/image/ServiceADiagram.png)
 
 ## Service B
 
 The router AuditLogRepository has an endpoint **activemq:audit-logging-channel** receives a message from an ActiveMQ queue, transforms the message into an Entity and saves it in a MySQL database.
 
-[!Service A flow](/image/ServiceBDiagram.png)
+![Service A flow](/image/ServiceBDiagram.png)
 
 ## Resources
 
