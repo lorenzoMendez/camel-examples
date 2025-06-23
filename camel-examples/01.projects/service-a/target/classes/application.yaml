@@ -1,0 +1,18 @@
+server.port: 8080
+---
+spring:
+  application:
+    name: apache-camel-a
+  activemq:
+    broker-url: tcp://localhost:61616
+---
+camel:
+  period: 10000
+  component:
+    kafka:
+      brokers: localhost:9092
+  resources:
+    agify:
+      url: https://api.agify.io?name=$simple{headers.name}
+    nationalize:
+      url: https://api.nationalize.io?name=$simple{headers.name}
