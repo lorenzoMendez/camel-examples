@@ -2,11 +2,17 @@ package com.ibm.camel.model;
 
 import java.io.Serializable;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
-@Data
+@Getter
+@Setter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class User implements Serializable {
 
   private static final long serialVersionUID = 8133241453494705264L;

@@ -41,10 +41,13 @@ public class RequestController {
   public ResponseEntity<?> retrieveUserData(@PathVariable("name") String name) {
 
     log.info("Name: {}", name);
+    
+    String route = "direct:start";
+    //String route = "direct:processRequest";
 
     return new ResponseEntity<UserResponse>(
         template.requestBodyAndHeader(
-            "direct:processRequest", null, "name", name, UserResponse.class),
+        		route, null, "name", name, UserResponse.class),
         HttpStatus.OK);
   }
 }
