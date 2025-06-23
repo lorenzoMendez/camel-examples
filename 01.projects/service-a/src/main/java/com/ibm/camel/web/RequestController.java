@@ -35,7 +35,7 @@ public class RequestController {
    * Process the router 'direct:processRequest'.
    * 
    * @param name variable used to retrieve the data.
-   * @return UserResponse data
+   * @return UserResponse data.
    */
   @GetMapping("/user/{name}")
   public ResponseEntity<?> retrieveUserData(@PathVariable("name") String name) {

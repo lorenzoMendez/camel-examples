@@ -2,12 +2,14 @@ package com.ibm.camel.routes;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ibm.camel.exception.CustomErrorException;
 import com.ibm.camel.model.AuditLogEventDto;
 import com.ibm.camel.model.User;
 import com.ibm.camel.model.UserData;
@@ -96,39 +98,62 @@ public class RestConsumerRouter extends RouteBuilder {
 
     from("direct:start")
         .log("Header: ${headers.name}")
-        // Definir los endpoints en propiedades
+        // API porperties
         .setProperty("apiAEndpoint", simple(END_POINT_A))
         .setProperty("apiBEndpoint", simple(END_POINT_B))
+
+        // Retry configuration
+        .errorHandler(
+            defaultErrorHandler()
+                .maximumRedeliveries(2) // Retries number.
+                .redeliveryDelay(1000) // Delay between retries (ms).
+                .onRedelivery(
+                    exchange -> {
+                      log.warn(
+                          "Retry API failed: " + exchange.getProperty(Exchange.FAILURE_ENDPOINT));
+                    })
+                .retryAttemptedLogLevel(LoggingLevel.WARN)) // Logging level.
 
         // Enviar en paralelo ambas peticiones
         .recipientList(simple("${exchangeProperty.apiAEndpoint}, ${exchangeProperty.apiBEndpoint}"))
         .parallelProcessing()
         .timeout(3000)
         .aggregationStrategy(new ApiAggregationStrategy())
-        .end();
+        .end()
+
+        // Handle exceptions.
+        .onException(Exception.class)
+          .handled(true)
+          .process(
+            exchange -> {
+              var exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+              log.error("Error: {}", exception.getMessage());
+              throw new CustomErrorException("API error response", exception.getMessage());
+            });
   }
 
-  /**
-   * Implements a strategy to obtain API response results.
-   */
+  /** Implements a strategy to obtain API response results. */
   class ApiAggregationStrategy implements AggregationStrategy {
 
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-
-      if (oldExchange == null) {
-        var response = new UserResponse(null, null, null);
-        updateResponse(response, newExchange);
-        newExchange.getIn().setBody(response);
-        return newExchange;
-      }
-      var response = oldExchange.getIn().getBody(UserResponse.class);
+      // Retrieve the previous data if was already created.
+      var response =
+          (oldExchange == null)
+              ? new UserResponse(null, null, null)
+              : oldExchange.getIn().getBody(UserResponse.class);
       updateResponse(response, newExchange);
-      newExchange.getIn().setBody(response);
 
-      return oldExchange;
+      newExchange.getIn().setBody(response);
+      return newExchange;
     }
 
+    /**
+     * Deserialize the response and set the attributes.
+     *
+     * @param response the object to be used in response.
+     * @param exchange the exchange data to be processed.
+     */
     private void updateResponse(UserResponse response, Exchange exchange) {
       String uri = exchange.getProperty(Exchange.TO_ENDPOINT, String.class);
       String body = exchange.getIn().getBody(String.class);
