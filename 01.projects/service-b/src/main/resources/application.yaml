@@ -1,0 +1,39 @@
+logging:
+  level:
+    root: INFO
+    com.ibm.camel: DEBUG
+---
+server:
+  port: 8090
+---
+spring:
+  application:
+    name: apache-camel-b
+  activemq:
+    broker-url: tcp://localhost:61616
+  datasource:
+    url: jdbc:mysql://localhost:3306/{your_database}?useSSL=false&allowPublicKeyRetrieval=true&serverTimeZone=UTC # Change 'your_database' to your database name'
+    username: {your_root_username}
+    password: {your_root_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: none
+  sql:
+    init:
+      mode: always
+      schema-location: classpath:schema.sql
+---
+camel:
+  route:
+    autoStartup: true
+  component:
+    kafka:
+      brokers: localhost:9092
+---
+file:
+  source:
+    directory: {your_PLER_FLACC_directory}
+    name: PLER_FLACC.csv
+
