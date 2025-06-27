@@ -1,0 +1,33 @@
+logging:
+  level:
+    root: INFO
+    com.ibm.camel: DEBUG
+---
+server:
+  port: 8080
+---
+spring:
+  application:
+    name: order-service
+  activemq:
+    broker-url: tcp://localhost:61616
+  datasource:
+    url: jdbc:mysql://localhost:3306/{my_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimeZone=UTC
+    username: {my_username}
+    password: {my_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: none
+  sql:
+    init:
+      mode: always
+      data-location: classpath:data.sql
+      schema-location: classpath:schema.sql
+---
+camel:
+  component:
+    kafka:
+      brokers: localhost:9092
+
